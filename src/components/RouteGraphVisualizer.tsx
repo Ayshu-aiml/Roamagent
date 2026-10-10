@@ -7,14 +7,9 @@ import {
   Car,
   Footprints,
   Clock,
-  IndianRupee,
-  ShieldCheck,
   AlertTriangle,
-  Info,
-  ExternalLink,
-  Zap,
-  RotateCcw,
-  Navigation
+  Navigation,
+  GitBranch
 } from 'lucide-react';
 import { GraphEdge, GraphNode, Itinerary, TransportMode } from '../types/travel';
 
@@ -31,43 +26,42 @@ export const RouteGraphVisualizer: React.FC<RouteGraphVisualizerProps> = ({
 }) => {
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<GraphEdge | null>(null);
-  const [disruptDelayInput, setDisruptDelayInput] = useState<number>(60);
 
   const { graph, edges } = itinerary;
 
   const getModeIcon = (mode: TransportMode) => {
     switch (mode) {
       case 'walk':
-        return <Footprints className="w-4 h-4 text-emerald-400" />;
+        return <Footprints className="w-3.5 h-3.5 text-slate-600" />;
       case 'cab':
-        return <Car className="w-4 h-4 text-amber-400" />;
+        return <Car className="w-3.5 h-3.5 text-slate-600" />;
       case 'bus':
-        return <Bus className="w-4 h-4 text-blue-400" />;
+        return <Bus className="w-3.5 h-3.5 text-slate-600" />;
       case 'train':
-        return <Train className="w-4 h-4 text-cyan-400" />;
+        return <Train className="w-3.5 h-3.5 text-slate-600" />;
       case 'flight':
-        return <Plane className="w-4 h-4 text-purple-400" />;
+        return <Plane className="w-3.5 h-3.5 text-slate-600" />;
       case 'metro':
-        return <Navigation className="w-4 h-4 text-emerald-400" />;
+        return <Navigation className="w-3.5 h-3.5 text-slate-600" />;
       default:
-        return <Car className="w-4 h-4 text-slate-400" />;
+        return <Car className="w-3.5 h-3.5 text-slate-600" />;
     }
   };
 
   const getNodeIcon = (type: GraphNode['type']) => {
     switch (type) {
       case 'origin':
-        return <MapPin className="w-4 h-4 text-emerald-400" />;
+        return <MapPin className="w-4 h-4 text-emerald-600" />;
       case 'destination':
-        return <MapPin className="w-4 h-4 text-rose-400" />;
+        return <MapPin className="w-4 h-4 text-rose-600" />;
       case 'airport':
-        return <Plane className="w-4 h-4 text-purple-400" />;
+        return <Plane className="w-4 h-4 text-sky-600" />;
       case 'station':
-        return <Train className="w-4 h-4 text-cyan-400" />;
+        return <Train className="w-4 h-4 text-amber-600" />;
       case 'metro_station':
-        return <Navigation className="w-4 h-4 text-teal-400" />;
+        return <Navigation className="w-4 h-4 text-teal-600" />;
       default:
-        return <MapPin className="w-4 h-4 text-blue-400" />;
+        return <MapPin className="w-4 h-4 text-slate-600" />;
     }
   };
 
@@ -82,40 +76,26 @@ export const RouteGraphVisualizer: React.FC<RouteGraphVisualizerProps> = ({
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl shadow-black/40">
-      {/* Visualizer Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-2">
-        <div>
-          <h3 className="text-base font-bold text-white flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
-            Interactive Time-Aware Transport Graph
+    <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+      {/* Schematic Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-2">
+        <div className="flex items-center gap-2">
+          <GitBranch className="w-4 h-4 text-slate-500" />
+          <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+            Transit Schematic & Multimodal Routing Graph
           </h3>
-          <p className="text-xs text-slate-400">
-            Directed multi-modal journey DAG · Click any node or edge to inspect details or test live disruptions
-          </p>
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-slate-400">
-          <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400" /> Origin/Walk
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-cyan-400" /> Rail/Express
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-purple-400" /> Air
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-rose-400" /> Destination
-          </span>
+        <div className="text-[11px] text-slate-500">
+          Click any station or transit leg to inspect parameters & test network disruptions
         </div>
       </div>
 
-      {/* Interactive Graph Canvas / Flow Layout */}
-      <div className="mt-6 overflow-x-auto pb-4">
-        <div className="min-w-[760px] py-4 flex items-center justify-between relative px-2">
-          {/* Background DAG timeline connector line */}
-          <div className="absolute top-1/2 left-8 right-8 h-1 bg-slate-800 -translate-y-1/2 z-0" />
+      {/* Transit Schematic Flow */}
+      <div className="mt-5 overflow-x-auto pb-4">
+        <div className="min-w-[780px] py-3 flex items-center justify-between relative px-2">
+          {/* Schematic Track Base */}
+          <div className="absolute top-8 left-10 right-10 h-1 bg-slate-200 z-0" />
 
           {graph.nodes.map((node, index) => {
             const edgeAfter = edges[index];
@@ -125,76 +105,78 @@ export const RouteGraphVisualizer: React.FC<RouteGraphVisualizerProps> = ({
 
             return (
               <React.Fragment key={node.id}>
-                {/* Graph Node */}
+                {/* Station Node Marker */}
                 <div className="relative z-10 flex flex-col items-center">
                   <button
                     type="button"
                     onClick={() => handleSelectNode(node)}
-                    className={`w-12 h-12 rounded-2xl flex items-center justify-center transition cursor-pointer shadow-lg ${
+                    className={`w-11 h-11 rounded-lg flex items-center justify-center transition cursor-pointer border-2 shadow-xs ${
                       isNodeSelected
-                        ? 'ring-4 ring-cyan-500 bg-slate-800 scale-110 shadow-cyan-500/30'
+                        ? 'bg-blue-50 border-blue-600 ring-2 ring-blue-100'
                         : isOrigin
-                        ? 'bg-emerald-950 border-2 border-emerald-500 text-emerald-300 hover:scale-105'
+                        ? 'bg-emerald-50 border-emerald-600 hover:border-emerald-700'
                         : isDest
-                        ? 'bg-rose-950 border-2 border-rose-500 text-rose-300 hover:scale-105'
-                        : 'bg-slate-800 border-2 border-slate-700 text-slate-200 hover:border-cyan-500 hover:scale-105'
+                        ? 'bg-rose-50 border-rose-600 hover:border-rose-700'
+                        : 'bg-white border-slate-300 hover:border-slate-500'
                     }`}
-                    title={`Click to inspect ${node.label}`}
+                    title={`Inspect node: ${node.label}`}
                   >
                     {getNodeIcon(node.type)}
                   </button>
 
-                  {/* Node Labels */}
-                  <div className="mt-2 text-center max-w-[120px]">
-                    <span className="text-[11px] font-bold text-white block truncate" title={node.label}>
+                  <div className="mt-2 text-center max-w-[130px]">
+                    <span className="text-[11px] font-bold text-slate-800 block truncate" title={node.label}>
                       {node.label}
                     </span>
-                    <span className="text-[10px] text-slate-400 block">
-                      {node.scheduledArrival ? `Arr: ${node.scheduledArrival}` : `Dep: ${node.scheduledDeparture}`}
+                    <span className="text-[10px] text-slate-500 font-mono block">
+                      {node.scheduledArrival ? `Arr ${node.scheduledArrival}` : `Dep ${node.scheduledDeparture}`}
                     </span>
                   </div>
                 </div>
 
-                {/* Graph Edge (Transport Connection) */}
+                {/* Transit Leg Track & Fare Edge */}
                 {edgeAfter && (
-                  <div className="flex-1 px-3 relative z-10 flex flex-col items-center">
+                  <div className="flex-1 px-2.5 relative z-10 flex flex-col items-center">
                     <button
                       type="button"
                       onClick={() => handleSelectEdge(edgeAfter)}
-                      className={`w-full py-2 px-2.5 rounded-xl border text-center transition cursor-pointer shadow-md ${
+                      className={`w-full py-2 px-2.5 rounded-lg border text-left transition cursor-pointer shadow-xs ${
                         selectedEdge?.id === edgeAfter.id
-                          ? 'bg-cyan-950 border-cyan-400 ring-2 ring-cyan-500/50'
+                          ? 'bg-blue-50/60 border-blue-600 ring-1 ring-blue-600'
                           : edgeAfter.isDisrupted
-                          ? 'bg-rose-950/80 border-rose-500 text-rose-200 animate-pulse'
-                          : 'bg-slate-800/90 border-slate-700 hover:border-slate-600 hover:bg-slate-800 text-slate-300'
+                          ? 'bg-rose-50 border-rose-300 text-rose-900'
+                          : 'bg-slate-50 border-slate-200 hover:border-slate-300 hover:bg-slate-100/60'
                       }`}
-                      title="Click to inspect or simulate disruption on this leg"
+                      title="Inspect this transit leg or test disruption"
                     >
-                      <div className="flex items-center justify-center gap-1.5 mb-1">
-                        {getModeIcon(edgeAfter.mode)}
-                        <span className="text-[11px] font-bold text-white truncate max-w-[90px]">
-                          {edgeAfter.mode.toUpperCase()}
-                        </span>
-                        {edgeAfter.isDisrupted && (
-                          <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                      <div className="flex items-center justify-between gap-1 mb-1">
+                        <div className="flex items-center gap-1.5">
+                          {getModeIcon(edgeAfter.mode)}
+                          <span className="text-[10px] font-bold text-slate-800 uppercase tracking-wider">
+                            {edgeAfter.mode}
+                          </span>
+                        </div>
+                        {edgeAfter.isDisrupted ? (
+                          <span className="text-[9px] font-bold text-rose-600 uppercase">
+                            Disrupted
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-mono text-emerald-700 font-bold">
+                            ₹{edgeAfter.farePerPerson.toLocaleString()}
+                          </span>
                         )}
                       </div>
 
-                      <div className="flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-700/60 pt-1">
-                        <span className="flex items-center gap-0.5">
-                          <Clock className="w-2.5 h-2.5" />
-                          {edgeAfter.durationMinutes}m
-                        </span>
-                        <span className="font-semibold text-emerald-400">
-                          ₹{edgeAfter.farePerPerson.toLocaleString()}
-                        </span>
+                      <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono border-t border-slate-200/80 pt-1">
+                        <span>{edgeAfter.durationMinutes}m</span>
+                        <span>{edgeAfter.distanceKm}km</span>
                       </div>
                     </button>
 
-                    {/* Transfer / Buffer Notice */}
+                    {/* Transfer Buffer */}
                     {edgeAfter.waitingTimeMinutes > 0 && (
-                      <span className="mt-1 text-[9px] text-amber-300/80 font-medium">
-                        {edgeAfter.waitingTimeMinutes}m buffer
+                      <span className="mt-1 text-[9px] text-slate-500 font-mono">
+                        +{edgeAfter.waitingTimeMinutes}m buffer
                       </span>
                     )}
                   </div>
@@ -205,79 +187,66 @@ export const RouteGraphVisualizer: React.FC<RouteGraphVisualizerProps> = ({
         </div>
       </div>
 
-      {/* Deep Inspector & Disruption Trigger Panel */}
+      {/* Detail Inspector & Network Disruption Controller */}
       {(selectedEdge || selectedNode) && (
-        <div className="mt-6 p-4 sm:p-5 bg-slate-950/90 border border-slate-800 rounded-xl relative">
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedEdge(null);
-              setSelectedNode(null);
-            }}
-            className="absolute top-3 right-3 text-xs text-slate-500 hover:text-white px-2 py-1 rounded bg-slate-900 border border-slate-800"
-          >
-            Close Inspector
-          </button>
+        <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs">
+          <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-200">
+            <span className="font-bold text-slate-800 uppercase tracking-wider text-[11px]">
+              {selectedEdge ? `Leg Details: ${selectedEdge.name}` : `Station Details: ${selectedNode?.label}`}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedEdge(null);
+                setSelectedNode(null);
+              }}
+              className="text-slate-500 hover:text-slate-900 px-2.5 py-0.5 rounded bg-white border border-slate-200 cursor-pointer font-medium"
+            >
+              Close
+            </button>
+          </div>
 
-          {/* Edge Inspector */}
           {selectedEdge && (
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-1.5 rounded-lg bg-cyan-950 border border-cyan-800 text-cyan-400">
-                  {getModeIcon(selectedEdge.mode)}
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-white">
-                    {selectedEdge.name} ({selectedEdge.operator})
-                  </h4>
-                  <span className="text-xs text-slate-400">
-                    Source: {selectedEdge.source} · Reliability: {selectedEdge.reliabilityPercent}%
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 my-3 text-xs">
-                <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
-                  <span className="text-slate-500 block text-[10px]">SCHEDULE</span>
-                  <span className="font-semibold text-white">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                <div className="bg-white p-2.5 rounded border border-slate-200 shadow-xs">
+                  <span className="text-[10px] text-slate-400 uppercase block font-semibold">Timetable</span>
+                  <span className="font-mono text-slate-900 font-semibold">
                     {selectedEdge.departureTime} → {selectedEdge.arrivalTime}
                   </span>
                 </div>
 
-                <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
-                  <span className="text-slate-500 block text-[10px]">FARE (PER PERSON)</span>
-                  <span className="font-semibold text-emerald-400">
+                <div className="bg-white p-2.5 rounded border border-slate-200 shadow-xs">
+                  <span className="text-[10px] text-slate-400 uppercase block font-semibold">Carrier / Operator</span>
+                  <span className="text-slate-900 font-semibold truncate block">
+                    {selectedEdge.operator}
+                  </span>
+                </div>
+
+                <div className="bg-white p-2.5 rounded border border-slate-200 shadow-xs">
+                  <span className="text-[10px] text-slate-400 uppercase block font-semibold">Fare & Confidence</span>
+                  <span className="text-emerald-700 font-bold font-mono">
                     ₹{selectedEdge.farePerPerson.toLocaleString()} ({selectedEdge.confidence})
                   </span>
                 </div>
 
-                <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
-                  <span className="text-slate-500 block text-[10px]">DISTANCE & TIME</span>
-                  <span className="font-semibold text-white">
-                    {selectedEdge.distanceKm} km · {selectedEdge.durationMinutes} mins
-                  </span>
-                </div>
-
-                <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
-                  <span className="text-slate-500 block text-[10px]">WAITING / BUFFER</span>
-                  <span className="font-semibold text-amber-400">
-                    {selectedEdge.waitingTimeMinutes} mins transfer
+                <div className="bg-white p-2.5 rounded border border-slate-200 shadow-xs">
+                  <span className="text-[10px] text-slate-400 uppercase block font-semibold">Data Source</span>
+                  <span className="text-slate-700 font-medium truncate block">
+                    {selectedEdge.source}
                   </span>
                 </div>
               </div>
 
-              <p className="text-xs text-slate-300 leading-relaxed bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 mb-4">
-                <Info className="w-3.5 h-3.5 text-cyan-400 inline mr-1" />
+              <p className="text-slate-700 leading-relaxed bg-white p-2.5 rounded border border-slate-200 mb-3">
                 {selectedEdge.instructions}
               </p>
 
-              {/* Disruption Simulator Actions */}
-              <div className="pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span className="text-xs font-semibold text-slate-200">
-                    Test Live Disruption Simulator:
-                  </span>
+              {/* Network Disruption Simulator */}
+              <div className="pt-2.5 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 text-slate-700">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                  <span className="font-bold text-[11px]">Network Disruption Test:</span>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -285,63 +254,46 @@ export const RouteGraphVisualizer: React.FC<RouteGraphVisualizerProps> = ({
                     type="button"
                     disabled={isDisrupting}
                     onClick={() => onSimulateDisruption(selectedEdge.id, 45, false)}
-                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-amber-950/60 hover:bg-amber-900/60 text-amber-300 border border-amber-800 transition disabled:opacity-50"
+                    className="px-3 py-1 rounded-md text-xs font-semibold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 transition cursor-pointer disabled:opacity-50"
                   >
-                    Simulate 45m Delay
+                    +45m Delay
                   </button>
 
                   <button
                     type="button"
                     disabled={isDisrupting}
                     onClick={() => onSimulateDisruption(selectedEdge.id, 90, false)}
-                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-orange-950/60 hover:bg-orange-900/60 text-orange-300 border border-orange-800 transition disabled:opacity-50"
+                    className="px-3 py-1 rounded-md text-xs font-semibold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 transition cursor-pointer disabled:opacity-50"
                   >
-                    Simulate 90m Delay
+                    +90m Delay
                   </button>
 
                   <button
                     type="button"
                     disabled={isDisrupting}
                     onClick={() => onSimulateDisruption(selectedEdge.id, 0, true)}
-                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-rose-950/60 hover:bg-rose-900/60 text-rose-300 border border-rose-800 transition disabled:opacity-50"
+                    className="px-3 py-1 rounded-md text-xs font-semibold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 transition cursor-pointer disabled:opacity-50"
                   >
-                    Simulate Cancellation
+                    Cancel Service
                   </button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Node Inspector */}
           {selectedNode && (
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-white">
-                  {getNodeIcon(selectedNode.type)}
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-white">
-                    {selectedNode.label}
-                  </h4>
-                  <span className="text-xs text-slate-400">
-                    City: {selectedNode.city} · Type: {selectedNode.type.replace('_', ' ').toUpperCase()}
-                  </span>
-                </div>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="bg-white p-2.5 rounded border border-slate-200">
+                <span className="text-[10px] text-slate-400 uppercase block font-semibold">Station Coordinates</span>
+                <span className="font-mono text-slate-800 font-medium">
+                  {selectedNode.coordinates.lat.toFixed(4)}, {selectedNode.coordinates.lng.toFixed(4)}
+                </span>
               </div>
-
-              <div className="grid grid-cols-2 gap-3 my-3 text-xs">
-                <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
-                  <span className="text-slate-500 block text-[10px]">COORDINATES</span>
-                  <span className="font-mono text-slate-200">
-                    {selectedNode.coordinates.lat.toFixed(4)}, {selectedNode.coordinates.lng.toFixed(4)}
-                  </span>
-                </div>
-                <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
-                  <span className="text-slate-500 block text-[10px]">ADDRESS / FACILITY</span>
-                  <span className="text-slate-200 truncate block">
-                    {selectedNode.address || `${selectedNode.label}, ${selectedNode.city}`}
-                  </span>
-                </div>
+              <div className="bg-white p-2.5 rounded border border-slate-200">
+                <span className="text-[10px] text-slate-400 uppercase block font-semibold">Terminal Address</span>
+                <span className="text-slate-800 font-medium truncate block">
+                  {selectedNode.address || `${selectedNode.label}, ${selectedNode.city}`}
+                </span>
               </div>
             </div>
           )}

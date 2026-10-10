@@ -1,16 +1,6 @@
 import React from 'react';
-import {
-  IndianRupee,
-  Receipt,
-  Users,
-  Utensils,
-  Hotel,
-  ShieldCheck,
-  CheckCircle,
-  HelpCircle,
-  TrendingDown
-} from 'lucide-react';
-import { DoorToDoorCost, TravelConstraints } from '../types/travel';
+import { Receipt, Utensils } from 'lucide-react';
+import { DoorToDoorCost } from '../types/travel';
 
 interface DoorToDoorCostCardProps {
   cost: DoorToDoorCost;
@@ -32,29 +22,13 @@ export const DoorToDoorCostCard: React.FC<DoorToDoorCostCardProps> = ({
   const getConfidenceBadge = (confidence: string) => {
     switch (confidence) {
       case 'confirmed':
-        return (
-          <span className="text-[10px] font-medium text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-1.5 py-0.5 rounded">
-            Confirmed
-          </span>
-        );
+        return <span className="text-[10px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-semibold">Confirmed</span>;
       case 'estimated':
-        return (
-          <span className="text-[10px] font-medium text-amber-400 bg-amber-950/60 border border-amber-800/60 px-1.5 py-0.5 rounded">
-            Estimated
-          </span>
-        );
+        return <span className="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded font-semibold">Estimated</span>;
       case 'user-entered':
-        return (
-          <span className="text-[10px] font-medium text-blue-400 bg-blue-950/60 border border-blue-800/60 px-1.5 py-0.5 rounded">
-            User-entered
-          </span>
-        );
+        return <span className="text-[10px] text-blue-800 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded font-semibold">User-entered</span>;
       default:
-        return (
-          <span className="text-[10px] font-medium text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">
-            Unavailable
-          </span>
-        );
+        return <span className="text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded font-medium">N/A</span>;
     }
   };
 
@@ -64,58 +38,55 @@ export const DoorToDoorCostCard: React.FC<DoorToDoorCostCardProps> = ({
     : null;
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl shadow-black/40">
+    <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-2">
-        <div>
-          <h3 className="text-base font-bold text-white flex items-center gap-2">
-            <Receipt className="w-4 h-4 text-emerald-400" />
-            Deterministic Door-to-Door Cost Engine
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-2">
+        <div className="flex items-center gap-2">
+          <Receipt className="w-4 h-4 text-slate-500" />
+          <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+            Door-to-Door Fare Statement
           </h3>
-          <p className="text-xs text-slate-400">
-            Total journey cost = first-mile + main transit + taxes + baggage + transfers + last-mile + optional extras
-          </p>
         </div>
 
-        {/* Big Total Figures */}
-        <div className="flex items-center gap-4 bg-slate-950 px-4 py-2 rounded-xl border border-slate-800">
+        {/* Totals */}
+        <div className="flex items-center gap-4 text-xs font-mono">
           <div>
-            <span className="text-[10px] text-slate-400 block uppercase tracking-wider">Per Person</span>
-            <span className="text-sm font-bold text-slate-200">
+            <span className="text-[10px] text-slate-400 block uppercase font-sans font-semibold">Per Traveler</span>
+            <span className="font-bold text-slate-800">
               ₹{cost.totalCostPerPerson.toLocaleString()}
             </span>
           </div>
-          <div className="h-7 w-px bg-slate-800" />
+          <div className="h-6 w-px bg-slate-200" />
           <div>
-            <span className="text-[10px] text-slate-400 block uppercase tracking-wider">Total Group ({travelers} pax)</span>
-            <span className="text-lg font-extrabold text-emerald-400">
+            <span className="text-[10px] text-slate-400 block uppercase font-sans font-semibold">Total ({travelers} pax)</span>
+            <span className="text-base font-extrabold text-emerald-700">
               ₹{cost.totalGroupCost.toLocaleString()}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Budget Meter */}
+      {/* Budget Progress Meter */}
       {totalBudget && (
-        <div className="mt-4 p-3 rounded-xl bg-slate-950 border border-slate-800/80">
+        <div className="mt-4 p-3 rounded-lg bg-slate-50 border border-slate-200">
           <div className="flex items-center justify-between text-xs mb-1.5">
-            <span className="text-slate-400 flex items-center gap-1">
-              Budget Allocated: <strong className="text-white">₹{totalBudget.toLocaleString()}</strong>
+            <span className="text-slate-600 font-medium">
+              Budget Cap: <strong className="text-slate-900 font-mono">₹{totalBudget.toLocaleString()}</strong>
             </span>
-            <span className={`font-semibold ${remainingBudget! >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+            <span className={`font-mono font-bold ${remainingBudget! >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
               {remainingBudget! >= 0
-                ? `Remaining Budget: ₹${remainingBudget!.toLocaleString()}`
-                : `Over Budget by: ₹${Math.abs(remainingBudget!).toLocaleString()}`}
+                ? `Remaining: ₹${remainingBudget!.toLocaleString()}`
+                : `Over Budget: ₹${Math.abs(remainingBudget!).toLocaleString()}`}
             </span>
           </div>
-          <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+          <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
             <div
-              className={`h-full transition-all duration-500 rounded-full ${
+              className={`h-full transition-all duration-300 rounded-full ${
                 budgetUtilizationPercent! > 100
                   ? 'bg-rose-500'
                   : budgetUtilizationPercent! > 85
-                  ? 'bg-amber-400'
-                  : 'bg-emerald-500'
+                  ? 'bg-amber-500'
+                  : 'bg-emerald-600'
               }`}
               style={{ width: `${Math.min(100, budgetUtilizationPercent!)}%` }}
             />
@@ -123,35 +94,35 @@ export const DoorToDoorCostCard: React.FC<DoorToDoorCostCardProps> = ({
         </div>
       )}
 
-      {/* Cost Line Items Breakdown */}
-      <div className="mt-5 space-y-2.5">
-        <span className="text-xs font-semibold text-slate-300 block uppercase tracking-wider">
-          Transparent Segment Line Items:
-        </span>
+      {/* Itemized Fare Statement Table */}
+      <div className="mt-4 space-y-1">
+        <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-2">
+          Itemized Transit & Fee Breakdown:
+        </div>
 
-        <div className="divide-y divide-slate-800/80 border border-slate-800/80 rounded-xl overflow-hidden bg-slate-950/60">
+        <div className="divide-y divide-slate-100 border border-slate-200 rounded-lg overflow-hidden bg-white text-xs">
           {cost.items.map((item, idx) => (
             <div
               key={idx}
-              className="p-3 flex items-center justify-between text-xs hover:bg-slate-900/60 transition"
+              className="p-3 flex items-center justify-between hover:bg-slate-50/70 transition"
             >
               <div className="flex-1 pr-3">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-slate-200">{item.label}</span>
+                  <span className="font-semibold text-slate-800">{item.label}</span>
                   {getConfidenceBadge(item.confidence)}
                 </div>
                 {item.notes && (
-                  <span className="text-[11px] text-slate-400 block mt-0.5">{item.notes}</span>
+                  <span className="text-[10px] text-slate-500 block mt-0.5">{item.notes}</span>
                 )}
               </div>
 
-              <div className="text-right shrink-0">
-                <span className="font-semibold text-white block">
+              <div className="text-right shrink-0 font-mono">
+                <span className="font-bold text-slate-900 block">
                   ₹{item.amountTotal.toLocaleString()}
                 </span>
                 {travelers > 1 && item.amountTotal > 0 && (
-                  <span className="text-[10px] text-slate-400 block">
-                    ₹{item.amountPerPerson.toLocaleString()} / person
+                  <span className="text-[10px] text-slate-500 block">
+                    (₹{item.amountPerPerson.toLocaleString()} ea)
                   </span>
                 )}
               </div>
@@ -160,49 +131,42 @@ export const DoorToDoorCostCard: React.FC<DoorToDoorCostCardProps> = ({
         </div>
       </div>
 
-      {/* Optional Expenses Interactive Tweak Bar */}
+      {/* Optional Allowances Bar */}
       {onUpdateOptionalExpenses && (
-        <div className="mt-5 pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-4 text-xs">
-          <div className="flex items-center gap-4">
-            <span className="font-semibold text-slate-300 flex items-center gap-1.5">
-              <Utensils className="w-3.5 h-3.5 text-amber-400" />
-              Configure Optional Allowances:
-            </span>
-
-            {/* Meals per person */}
+        <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600">
+          <div className="flex items-center gap-3">
+            <Utensils className="w-4 h-4 text-slate-400" />
             <div className="flex items-center gap-1.5">
-              <label htmlFor="meals-select" className="text-slate-400">Meals:</label>
+              <label htmlFor="meals-select" className="text-[11px] font-semibold text-slate-500">Meals:</label>
               <select
                 id="meals-select"
                 value={mealsBudgetPerPerson}
                 onChange={(e) => onUpdateOptionalExpenses(Number(e.target.value), hotelBudgetPerPerson)}
-                className="bg-slate-800 border border-slate-700 text-slate-200 rounded px-2 py-1 text-xs outline-none"
+                className="bg-slate-50 border border-slate-200 text-slate-800 rounded-md px-2 py-1 text-xs outline-none cursor-pointer focus:border-blue-500 font-medium"
               >
                 <option value={0}>None (₹0)</option>
-                <option value={200}>Light Snacks (₹200/pax)</option>
-                <option value={500}>Full Meals (₹500/pax)</option>
-                <option value={1000}>Premium Dining (₹1,000/pax)</option>
+                <option value={200}>Snacks (₹200/pax)</option>
+                <option value={500}>Meals (₹500/pax)</option>
               </select>
             </div>
 
-            {/* Hotel accommodation per person */}
             <div className="flex items-center gap-1.5">
-              <label htmlFor="stay-select" className="text-slate-400">Transit Stay:</label>
+              <label htmlFor="stay-select" className="text-[11px] font-semibold text-slate-500">Lodging:</label>
               <select
                 id="stay-select"
                 value={hotelBudgetPerPerson}
                 onChange={(e) => onUpdateOptionalExpenses(mealsBudgetPerPerson, Number(e.target.value))}
-                className="bg-slate-800 border border-slate-700 text-slate-200 rounded px-2 py-1 text-xs outline-none"
+                className="bg-slate-50 border border-slate-200 text-slate-800 rounded-md px-2 py-1 text-xs outline-none cursor-pointer focus:border-blue-500 font-medium"
               >
                 <option value={0}>None (₹0)</option>
-                <option value={800}>Pod/Dormitory (₹800/pax)</option>
-                <option value={2000}>Transit Hotel (₹2,000/pax)</option>
+                <option value={800}>Pod/Dorm (₹800/pax)</option>
+                <option value={2000}>Hotel (₹2,000/pax)</option>
               </select>
             </div>
           </div>
 
-          <span className="text-[11px] text-slate-500 italic">
-            Deterministic recalculation updates immediately
+          <span className="text-[10px] text-slate-400 font-mono">
+            Deterministic Fare Engine
           </span>
         </div>
       )}

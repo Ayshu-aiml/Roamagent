@@ -1,20 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Compass,
   AlertTriangle,
   Bookmark,
-  Share2,
   CheckCircle2,
   Loader2,
   RefreshCw,
   Info,
-  Calendar,
-  Sparkles,
   Printer
 } from 'lucide-react';
 import { AgentPlanResponse, Itinerary, TravelConstraints } from './types/travel';
 import { Header } from './components/Header';
-import { AgentChatVoice } from './components/AgentChatVoice';
+import { TravelSearchConsole } from './components/TravelSearchConsole';
 import { RouteOptionsSwitcher } from './components/RouteOptionsSwitcher';
 import { RouteGraphVisualizer } from './components/RouteGraphVisualizer';
 import { DoorToDoorCostCard } from './components/DoorToDoorCostCard';
@@ -121,7 +117,7 @@ export default function App() {
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || 'Failed to calculate optimal itineraries.');
+        throw new Error(errData.error || 'Failed to calculate transit routing.');
       }
 
       const planData: AgentPlanResponse = await res.json();
@@ -134,14 +130,14 @@ export default function App() {
       }
     } catch (err: any) {
       console.error(err);
-      setErrorMessage(err.message || 'An unexpected error occurred while planning your trip.');
+      setErrorMessage(err.message || 'An unexpected error occurred while computing routes.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Conversational Natural Language Message Handler
-  const handleSendMessage = async (text: string) => {
+  // Conversational / Voice Query Handler
+  const handleNaturalLanguageQuery = async (query: string) => {
     setIsLoading(true);
     setErrorMessage(null);
 
@@ -150,14 +146,14 @@ export default function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: text,
+          message: query,
           currentConstraints: activeConstraints,
           language: preferredLanguage
         })
       });
 
       if (!res.ok) {
-        throw new Error('Failed to communicate with conversational travel agent.');
+        throw new Error('Failed to resolve route query.');
       }
 
       const data = await res.json();
@@ -165,7 +161,7 @@ export default function App() {
       if (data.status === 'needs_clarification') {
         setNotificationBanner({
           type: 'info',
-          text: `RoamAgent: ${data.reply || data.clarificationQuestion}`
+          text: `Route Inquiry: ${data.reply || data.clarificationQuestion}`
         });
         if (data.extractedConstraints) {
           setActiveConstraints(prev => ({ ...prev, ...data.extractedConstraints }));
@@ -179,11 +175,11 @@ export default function App() {
         }
         setNotificationBanner({
           type: 'success',
-          text: `Trip plan generated successfully for ${data.plan.extractedConstraints.origin} → ${data.plan.extractedConstraints.destination}.`
+          text: `Itineraries refreshed: ${data.plan.extractedConstraints.origin} → ${data.plan.extractedConstraints.destination}.`
         });
       }
     } catch (err: any) {
-      setErrorMessage(err.message || 'Error processing your travel request.');
+      setErrorMessage(err.message || 'Error processing route search.');
     } finally {
       setIsLoading(false);
     }
@@ -258,7 +254,7 @@ export default function App() {
       localStorage.setItem('roamagent_saved_trips', JSON.stringify(updated));
       setNotificationBanner({
         type: 'success',
-        text: 'Itinerary saved to your local trip history!'
+        text: 'Itinerary saved to your local trip history.'
       });
     } catch {
       // Storage error
@@ -291,8 +287,8 @@ export default function App() {
   const activeItinerary: Itinerary | undefined = plan?.itineraries[selectedRouteType];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-cyan-500 selection:text-white">
-      {/* Top Navigation Bar */}
+    <div className="min-h-screen bg-slate-100 text-slate-900 flex flex-col font-sans">
+      {/* Top Header */}
       <Header
         language={preferredLanguage}
         onLanguageChange={(lang) => {
@@ -306,32 +302,32 @@ export default function App() {
         onExportTrip={() => window.print()}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      {/* Main Operations Dashboard */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-5">
         {/* Notification Banner */}
         {notificationBanner && (
           <div
-            className={`p-3.5 rounded-xl border text-xs leading-relaxed flex items-center justify-between gap-3 ${
+            className={`p-3.5 rounded-lg border text-xs leading-relaxed flex items-center justify-between gap-3 shadow-xs ${
               notificationBanner.type === 'alert'
-                ? 'bg-amber-950/40 border-amber-800/60 text-amber-200'
+                ? 'bg-amber-50 border-amber-300 text-amber-900'
                 : notificationBanner.type === 'success'
-                ? 'bg-emerald-950/40 border-emerald-800/60 text-emerald-200'
-                : 'bg-cyan-950/40 border-cyan-800/60 text-cyan-200'
+                ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
+                : 'bg-blue-50 border-blue-200 text-blue-900'
             }`}
           >
             <div className="flex items-center gap-2">
               {notificationBanner.type === 'alert' ? (
-                <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
+                <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
               ) : notificationBanner.type === 'success' ? (
-                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
               ) : (
-                <Info className="w-4 h-4 shrink-0 text-cyan-400" />
+                <Info className="w-4 h-4 shrink-0 text-blue-600" />
               )}
-              <span>{notificationBanner.text}</span>
+              <span className="font-medium">{notificationBanner.text}</span>
             </div>
             <button
               onClick={() => setNotificationBanner(null)}
-              className="text-slate-400 hover:text-white text-xs px-2 py-0.5 rounded hover:bg-slate-800/60 transition"
+              className="text-slate-500 hover:text-slate-900 text-xs px-2 py-0.5 rounded transition cursor-pointer font-medium"
             >
               Dismiss
             </button>
@@ -340,59 +336,59 @@ export default function App() {
 
         {/* Global Error Banner */}
         {errorMessage && (
-          <div className="p-4 rounded-xl bg-rose-950/50 border border-rose-800 text-rose-200 text-xs flex items-center justify-between">
+          <div className="p-3.5 rounded-lg bg-rose-50 border border-rose-300 text-rose-900 text-xs flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
-              <span>{errorMessage}</span>
+              <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+              <span className="font-medium">{errorMessage}</span>
             </div>
             <button
               onClick={() => executePlanRequest(activeConstraints)}
-              className="px-2.5 py-1 bg-rose-900/80 hover:bg-rose-800 rounded font-semibold text-white transition flex items-center gap-1"
+              className="px-3 py-1 bg-rose-600 hover:bg-rose-700 rounded-md font-semibold text-white transition flex items-center gap-1 cursor-pointer"
             >
               <RefreshCw className="w-3 h-3" /> Retry
             </button>
           </div>
         )}
 
-        {/* Conversational & Voice Planning Control Panel */}
-        <AgentChatVoice
-          onSendMessage={handleSendMessage}
-          isLoading={isLoading}
+        {/* Multimodal Travel Search Console */}
+        <TravelSearchConsole
           activeConstraints={activeConstraints}
-          onOpenConstraintsModal={() => setIsConstraintsModalOpen(true)}
+          onSearch={executePlanRequest}
+          onNaturalLanguageQuery={handleNaturalLanguageQuery}
+          isLoading={isLoading}
           speechSummary={plan?.speechSummary || ''}
           serverAudioBase64={serverAudioBase64}
           preferredLanguage={preferredLanguage}
         />
 
-        {/* Loading Overlay State */}
+        {/* Loading Overlay */}
         {isLoading && !plan && (
-          <div className="py-20 flex flex-col items-center justify-center gap-4 text-slate-400">
-            <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
-            <p className="text-sm font-medium">
-              RoamAgent is calculating optimal transport graphs and door-to-door fares...
+          <div className="py-16 flex flex-col items-center justify-center gap-3 text-slate-500">
+            <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+            <p className="text-xs font-medium text-slate-600">
+              Interfacing with transit feeds and computing multimodal travel graph...
             </p>
           </div>
         )}
 
-        {/* Main Dashboard Results */}
+        {/* Results Workspace */}
         {plan && activeItinerary && (
-          <div className="space-y-6">
-            {/* Pareto Route Options Switcher */}
+          <div className="space-y-5">
+            {/* Pareto Route Alternatives Tier Selector */}
             <RouteOptionsSwitcher
               itineraries={plan.itineraries}
               selectedId={activeItinerary.id}
               onSelect={(type) => setSelectedRouteType(type)}
             />
 
-            {/* Action Toolbar (Save Trip, Export, Recalculate) */}
-            <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/60 border border-slate-800/80 px-4 py-2.5 rounded-xl text-xs">
+            {/* Active Corridor Status Toolbar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 px-4 py-3 rounded-xl text-xs shadow-xs">
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-white">Active Plan:</span>
-                <span className="text-cyan-400 font-bold">{activeItinerary.title}</span>
-                <span className="text-slate-500">·</span>
-                <span className="text-slate-400">
-                  Departs {activeItinerary.departureTime} → Arrives {activeItinerary.arrivalTime}
+                <span className="font-bold text-slate-500 uppercase tracking-wider text-[11px]">Active Itinerary:</span>
+                <span className="text-slate-900 font-bold">{activeItinerary.title}</span>
+                <span className="text-slate-300">·</span>
+                <span className="text-slate-600 font-mono">
+                  {activeItinerary.departureTime} Departure → {activeItinerary.arrivalTime} Arrival
                 </span>
               </div>
 
@@ -400,35 +396,35 @@ export default function App() {
                 <button
                   type="button"
                   onClick={handleSaveTrip}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition"
-                  title="Save this itinerary to local trip history"
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition cursor-pointer text-xs font-semibold"
+                  title="Save itinerary to history"
                 >
-                  <Bookmark className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Save Trip</span>
+                  <Bookmark className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Save</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition"
-                  title="Print or save as PDF"
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white transition cursor-pointer text-xs font-semibold shadow-xs"
+                  title="Print or export PDF"
                 >
-                  <Printer className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Print Itinerary</span>
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Print Ticket</span>
                 </button>
               </div>
             </div>
 
-            {/* Interactive Directed Transport Graph Visualizer */}
+            {/* Time-Aware Transport Graph Schematic */}
             <RouteGraphVisualizer
               itinerary={activeItinerary}
               onSimulateDisruption={handleSimulateDisruption}
               isDisrupting={isDisrupting}
             />
 
-            {/* Two Column Grid: Cost Engine & Chronological Itinerary */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-              {/* Left: Deterministic Cost Engine */}
+            {/* Two Column Grid: Cost Statement & Chronological Timetable */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+              {/* Itemized Fare Statement */}
               <DoorToDoorCostCard
                 cost={activeItinerary.totalCost}
                 travelers={activeConstraints.travelers}
@@ -438,14 +434,14 @@ export default function App() {
                 hotelBudgetPerPerson={activeConstraints.hotelBudgetPerPerson || 0}
               />
 
-              {/* Right: Step-by-Step Chronological Timeline */}
+              {/* Chronological Timetable */}
               <ChronologicalItinerary
                 itinerary={activeItinerary}
                 travelers={activeConstraints.travelers}
               />
             </div>
 
-            {/* Weather & Safety Intelligence Panel */}
+            {/* Weather & Travel Safety Panel */}
             <WeatherSafetyPanel
               plan={plan}
               activeItinerary={activeItinerary}
@@ -455,20 +451,20 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="mt-12 border-t border-slate-800/80 bg-slate-950 py-6 text-center text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <span>RoamAgent AI · Intelligent Agentic Multimodal Travel Planner</span>
-          <div className="flex items-center gap-3 text-slate-400">
-            <span>Graph-Based Routing</span>
+      <footer className="mt-10 border-t border-slate-200 bg-white py-5 text-xs text-slate-500">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <span className="font-medium text-slate-700">RoamAgent · National Multimodal Transit & Fare Engine</span>
+          <div className="flex items-center gap-3 text-slate-500 text-[11px]">
+            <span>Time-Aware Transport Graph</span>
             <span>·</span>
             <span>Deterministic Cost Formulas</span>
             <span>·</span>
-            <span>Multilingual Voice Integration</span>
+            <span>GDS Interconnect Feeds</span>
           </div>
         </div>
       </footer>
 
-      {/* Constraints Modal */}
+      {/* Modals */}
       <ConstraintsModal
         isOpen={isConstraintsModalOpen}
         onClose={() => setIsConstraintsModalOpen(false)}
@@ -479,7 +475,6 @@ export default function App() {
         }}
       />
 
-      {/* Benchmark Tests Modal */}
       <TestScenariosModal
         isOpen={isTestModalOpen}
         onClose={() => setIsTestModalOpen(false)}
@@ -489,7 +484,6 @@ export default function App() {
         }}
       />
 
-      {/* Saved Trips Modal */}
       <SavedTripsModal
         isOpen={isSavedTripsModalOpen}
         onClose={() => setIsSavedTripsModalOpen(false)}

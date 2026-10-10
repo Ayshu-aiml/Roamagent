@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, Zap, DollarSign, Clock, ArrowRight, CheckCircle2, AlertTriangle, Layers } from 'lucide-react';
+import { Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Itinerary } from '../types/travel';
 
 interface RouteOptionsSwitcherProps {
@@ -22,30 +22,26 @@ export const RouteOptionsSwitcher: React.FC<RouteOptionsSwitcherProps> = ({
   const routes: Array<{
     type: 'recommended' | 'cheapest' | 'fastest';
     itinerary: Itinerary;
-    icon: React.ReactNode;
-    badge: string;
-    badgeColor: string;
+    tierLabel: string;
+    tierSubtitle: string;
   }> = [
     {
       type: 'recommended',
       itinerary: recommended,
-      icon: <Award className="w-4 h-4 text-cyan-400" />,
-      badge: 'Best Overall',
-      badgeColor: 'border-cyan-500/50 bg-cyan-950/40 text-cyan-300'
+      tierLabel: 'Recommended Corridor',
+      tierSubtitle: 'Optimal balance of cost, transit time & connection buffers'
     },
     {
       type: 'cheapest',
       itinerary: cheapest,
-      icon: <DollarSign className="w-4 h-4 text-emerald-400" />,
-      badge: 'Lowest Fare',
-      badgeColor: 'border-emerald-500/50 bg-emerald-950/40 text-emerald-300'
+      tierLabel: 'Lowest Total Fare',
+      tierSubtitle: 'Minimum door-to-door group expenditure'
     },
     {
       type: 'fastest',
       itinerary: fastest,
-      icon: <Zap className="w-4 h-4 text-purple-400" />,
-      badge: 'Fastest Travel',
-      badgeColor: 'border-purple-500/50 bg-purple-950/40 text-purple-300'
+      tierLabel: 'Fastest Travel Time',
+      tierSubtitle: 'Express routing with shortest travel duration'
     }
   ];
 
@@ -56,18 +52,17 @@ export const RouteOptionsSwitcher: React.FC<RouteOptionsSwitcherProps> = ({
   };
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-          <Layers className="w-4 h-4 text-cyan-400" />
-          Pareto-Optimal Journey Alternatives
-        </h3>
-        <span className="text-xs text-slate-400">Select route to update graph and door-to-door cost</span>
+    <div className="space-y-2.5">
+      <div className="flex items-center justify-between text-xs text-slate-500">
+        <span className="font-bold text-slate-800 uppercase tracking-wider text-[11px]">
+          Multimodal Itinerary Alternatives ({routes.length})
+        </span>
+        <span className="text-[11px]">Select an option to inspect route details and cost breakdown</span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {routes.map(({ type, itinerary, icon, badge, badgeColor }) => {
-          const isSelected = selectedId === itinerary.id || (selectedId.includes(type));
+        {routes.map(({ type, itinerary, tierLabel }) => {
+          const isSelected = selectedId === itinerary.id || selectedId.includes(type);
           const costDelta = itinerary.totalCost.totalGroupCost - recommended.totalCost.totalGroupCost;
           const timeDelta = itinerary.totalDurationMinutes - recommended.totalDurationMinutes;
 
@@ -76,76 +71,78 @@ export const RouteOptionsSwitcher: React.FC<RouteOptionsSwitcherProps> = ({
               key={type}
               type="button"
               onClick={() => onSelect(type)}
-              className={`p-4 rounded-xl text-left transition relative border cursor-pointer ${
+              className={`p-4 rounded-xl text-left transition cursor-pointer border ${
                 isSelected
-                  ? 'bg-slate-800/90 border-cyan-500 shadow-lg shadow-cyan-950/30 ring-1 ring-cyan-500/40'
-                  : 'bg-slate-900/70 border-slate-800 hover:border-slate-700 hover:bg-slate-850'
+                  ? 'bg-blue-50/40 border-blue-600 ring-1 ring-blue-600 shadow-xs'
+                  : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
               }`}
             >
-              {/* Header */}
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-1.5">
-                  {icon}
-                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded border ${badgeColor}`}>
-                    {badge}
+              {/* Header Tier */}
+              <div className="flex items-center justify-between mb-1.5">
+                <span className={`text-xs font-bold uppercase tracking-wider ${isSelected ? 'text-blue-700' : 'text-slate-800'}`}>
+                  {tierLabel}
+                </span>
+                {isSelected ? (
+                  <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded uppercase tracking-wider">
+                    Selected
                   </span>
-                </div>
-                {isSelected && (
-                  <span className="text-[11px] font-bold text-cyan-400 bg-cyan-950 px-1.5 py-0.5 rounded border border-cyan-800">
-                    ACTIVE
+                ) : (
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider">
+                    Select
                   </span>
                 )}
               </div>
 
-              {/* Title & Timing */}
-              <h4 className="text-sm font-bold text-white truncate mb-1">
+              {/* Title */}
+              <h4 className="text-sm font-bold text-slate-900 truncate mb-0.5">
                 {itinerary.title}
               </h4>
-              <p className="text-xs text-slate-400 line-clamp-1 mb-3">
+              <p className="text-[11px] text-slate-500 line-clamp-1 mb-3">
                 {itinerary.summary}
               </p>
 
-              {/* Metrics Grid */}
-              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80 text-xs">
+              {/* Cost & Duration Metrics */}
+              <div className="grid grid-cols-2 gap-2 pt-2.5 border-t border-slate-100 text-xs">
                 <div>
-                  <span className="text-[10px] text-slate-500 block uppercase tracking-wider">Total Cost</span>
-                  <span className="text-base font-bold text-emerald-400">
+                  <span className="text-[10px] text-slate-400 block uppercase tracking-wider font-semibold">Total Fare</span>
+                  <span className="text-base font-extrabold text-emerald-700 font-mono">
                     ₹{itinerary.totalCost.totalGroupCost.toLocaleString()}
                   </span>
                   {type !== 'recommended' && (
-                    <span className="block text-[10px] text-slate-400">
-                      {costDelta > 0 ? `+₹${costDelta.toLocaleString()}` : `-₹${Math.abs(costDelta).toLocaleString()}`} vs best
+                    <span className="block text-[10px] text-slate-500 font-mono">
+                      {costDelta > 0 ? `+₹${costDelta.toLocaleString()}` : `-₹${Math.abs(costDelta).toLocaleString()}`}
                     </span>
                   )}
                 </div>
 
                 <div>
-                  <span className="text-[10px] text-slate-500 block uppercase tracking-wider">Total Time</span>
-                  <span className="text-base font-bold text-slate-200">
+                  <span className="text-[10px] text-slate-400 block uppercase tracking-wider font-semibold">Duration</span>
+                  <span className="text-base font-bold text-slate-800 font-mono">
                     {formatDuration(itinerary.totalDurationMinutes)}
                   </span>
                   {type !== 'recommended' && (
-                    <span className="block text-[10px] text-slate-400">
-                      {timeDelta > 0 ? `+${timeDelta}m slower` : `${Math.abs(timeDelta)}m faster`}
+                    <span className="block text-[10px] text-slate-500 font-mono">
+                      {timeDelta > 0 ? `+${timeDelta}m` : `${timeDelta}m`}
                     </span>
                   )}
                 </div>
               </div>
 
-              {/* Arrival & Constraints Badge */}
-              <div className="mt-3 flex items-center justify-between text-[11px] pt-2 border-t border-slate-800/60">
-                <div className="flex items-center gap-1 text-slate-300">
+              {/* Schedule and Deadline verification */}
+              <div className="mt-3 flex items-center justify-between text-[11px] pt-2 border-t border-slate-100 text-slate-500">
+                <span className="flex items-center gap-1 font-mono font-medium text-slate-700">
                   <Clock className="w-3 h-3 text-slate-400" />
-                  <span>Dep {itinerary.departureTime} → Arr {itinerary.arrivalTime}</span>
-                </div>
+                  {itinerary.departureTime} → {itinerary.arrivalTime}
+                </span>
+
                 <div>
                   {itinerary.satisfiesDeadline ? (
-                    <span className="text-emerald-400 flex items-center gap-0.5" title="Arrival satisfies deadline">
-                      <CheckCircle2 className="w-3 h-3 inline" /> On Time
+                    <span className="text-emerald-700 flex items-center gap-1 font-semibold text-[10px]">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600" /> On Time
                     </span>
                   ) : (
-                    <span className="text-amber-400 flex items-center gap-0.5" title="Arrival exceeds specified deadline">
-                      <AlertTriangle className="w-3 h-3 inline" /> Deadline Exceeded
+                    <span className="text-amber-700 flex items-center gap-1 font-semibold text-[10px]">
+                      <AlertTriangle className="w-3 h-3 text-amber-600" /> Exceeds
                     </span>
                   )}
                 </div>
