@@ -1,6 +1,28 @@
 import { GoogleGenAI } from '@google/genai';
 import { AgentPlanResponse, Itinerary, TravelConstraints } from '../src/types/travel.js';
 
+let quotaExhaustedUntil = 0;
+
+export function isGeminiQuotaExhausted(): boolean {
+  return Date.now() < quotaExhaustedUntil;
+}
+
+function markQuotaExhausted(err?: any) {
+  let delaySec = 300; // default 5 minutes
+  try {
+    if (err?.message && err.message.includes('RetryInfo')) {
+      const match = err.message.match(/retryDelay":"?([0-9]+)/);
+      if (match && match[1]) {
+        delaySec = Math.min(Number(match[1]), 3600);
+      }
+    }
+  } catch {
+    // ignore
+  }
+  quotaExhaustedUntil = Date.now() + (delaySec * 1000);
+  console.info(`[RoamAgent] Gemini API free-tier quota reached (429). Activating intelligent deterministic travel engine for next ${Math.round(delaySec / 60)} minutes.`);
+}
+
 function getGeminiClient(): GoogleGenAI | null {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey || apiKey === 'MY_GEMINI_API_KEY' || apiKey.trim() === '') {
@@ -16,7 +38,7 @@ function getGeminiClient(): GoogleGenAI | null {
   });
 }
 
-// Extract structured constraints from user prompt using Gemini 3.8 Flash
+// Extract structured constraints from user prompt using Gemini
 export async function extractConstraintsWithGemini(
   userPrompt: string,
   currentConstraints?: Partial<TravelConstraints>
@@ -27,9 +49,9 @@ export async function extractConstraintsWithGemini(
 }> {
   const ai = getGeminiClient();
 
-  if (ai) {
-    try {
-      const systemInstruction = `You are RoamAgent AI, an expert travel planner agent.
+  if (ai && !isGeminiQuotaExhausted()) {
+    const modelsToTry = ['gemini-3.8-flash', 'gemini-3.1-flash-lite'];
+    const systemInstruction = `You are RoamAgent AI, an expert travel planner agent.
 Extract travel parameters from the user's natural language input.
 Today is Saturday, October 10, 2026.
 Resolve relative dates (e.g. "tomorrow" -> 2026-10-11, "next Monday" -> 2026-10-12).
@@ -62,26 +84,32 @@ Return valid JSON matching this schema:
 }
 If destination or travel date is genuinely unknown and cannot be inferred, include in missingEssentialDetails and write a brief followUpQuestion.`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
-        contents: `User message: "${userPrompt}"\nCurrent known constraints: ${JSON.stringify(currentConstraints || {})}`,
-        config: {
-          systemInstruction,
-          responseMimeType: 'application/json',
-          temperature: 0.2
-        }
-      });
+    for (const model of modelsToTry) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents: `User message: "${userPrompt}"\nCurrent known constraints: ${JSON.stringify(currentConstraints || {})}`,
+          config: {
+            systemInstruction,
+            responseMimeType: 'application/json',
+            temperature: 0.2
+          }
+        });
 
-      if (response.text) {
-        const parsed = JSON.parse(response.text);
-        return {
-          extracted: parsed,
-          missingEssentialDetails: parsed.missingEssentialDetails || [],
-          followUpQuestion: parsed.followUpQuestion || undefined
-        };
+        if (response.text) {
+          const parsed = JSON.parse(response.text);
+          return {
+            extracted: parsed,
+            missingEssentialDetails: parsed.missingEssentialDetails || [],
+            followUpQuestion: parsed.followUpQuestion || undefined
+          };
+        }
+      } catch (err: any) {
+        if (err?.status === 'RESOURCE_EXHAUSTED' || err?.message?.includes('429') || err?.message?.includes('quota')) {
+          markQuotaExhausted(err);
+          break; // Stop querying rate-limited endpoint
+        }
       }
-    } catch (err) {
-      console.warn('Gemini extraction fallback:', err);
     }
   }
 
@@ -226,28 +254,34 @@ Warnings: ${selectedItinerary.warnings.join(', ') || 'None'}
 Language: ${language}
 `;
 
-  if (ai) {
-    try {
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
-        contents: `Explain this multimodal itinerary to the traveler in a clear, friendly, and reassuring manner.
+  if (ai && !isGeminiQuotaExhausted()) {
+    const modelsToTry = ['gemini-3.8-flash', 'gemini-3.1-flash-lite'];
+    for (const model of modelsToTry) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents: `Explain this multimodal itinerary to the traveler in a clear, friendly, and reassuring manner.
 Provide an executive spoken summary (under 3 sentences) suitable for audio readout, followed by key door-to-door transit advice.
 Respond in language code: ${language}.
 Details:
 ${promptDetails}`,
-        config: {
-          temperature: 0.3
-        }
-      });
+          config: {
+            temperature: 0.3
+          }
+        });
 
-      if (response.text) {
-        const full = response.text.trim();
-        const sentences = full.split('. ');
-        const speechSummary = sentences.slice(0, 2).join('. ') + '.';
-        return { text: full, speechSummary };
+        if (response.text) {
+          const full = response.text.trim();
+          const sentences = full.split('. ');
+          const speechSummary = sentences.slice(0, 2).join('. ') + '.';
+          return { text: full, speechSummary };
+        }
+      } catch (e: any) {
+        if (e?.status === 'RESOURCE_EXHAUSTED' || e?.message?.includes('429') || e?.message?.includes('quota')) {
+          markQuotaExhausted(e);
+          break;
+        }
       }
-    } catch (e) {
-      console.warn('Gemini explanation fallback:', e);
     }
   }
 
@@ -279,7 +313,7 @@ Recommended Route: **${selectedItinerary.title}**
 // Generate Natural Speech with Gemini TTS (gemini-3.8-flash-lite-tts)
 export async function generateSpeechWithGemini(text: string): Promise<string | null> {
   const ai = getGeminiClient();
-  if (!ai) return null;
+  if (!ai || isGeminiQuotaExhausted()) return null;
 
   try {
     const response = await ai.models.generateContent({
@@ -309,8 +343,10 @@ export async function generateSpeechWithGemini(text: string): Promise<string | n
 
     const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     return base64Audio || null;
-  } catch (err) {
-    console.warn('Gemini TTS fallback:', err);
+  } catch (err: any) {
+    if (err?.status === 'RESOURCE_EXHAUSTED' || err?.message?.includes('429') || err?.message?.includes('quota')) {
+      markQuotaExhausted(err);
+    }
     return null;
   }
 }

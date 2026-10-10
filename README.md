@@ -89,6 +89,23 @@ npm start
 
 ---
 
+## Deploying to Netlify
+
+RoamAgent AI includes full support for Netlify Serverless Functions:
+1. **Automated Serverless Routing**:
+   - `netlify/functions/api.ts` handles all backend API routes (`/api/plan-trip`, `/api/chat`, `/api/disrupt-trip`, `/api/tts`, `/api/test-scenarios`, etc.) via `serverless-http`.
+   - `netlify.toml` and `public/_redirects` transparently route all incoming `/api/*` traffic to the serverless function, and fallback `/*` to `index.html` for SPA navigation.
+2. **Set Environment Variables on Netlify**:
+   - Go to **Netlify Dashboard** $\to$ Your Site (`roamagent`) $\to$ **Site configuration** $\to$ **Environment variables**.
+   - Add:
+     - `GEMINI_API_KEY`: Your Google Gemini API key.
+     - *(Optional)* `GOOGLE_MAPS_API_KEY`, `OPENWEATHER_API_KEY`, `N8N_WEBHOOK_URL`.
+3. **Redeploy**:
+   - Push your latest commits to your GitHub repository.
+   - Netlify will automatically trigger a new deployment, compile the Vite frontend, package the serverless function with `esbuild`, and activate the API routes.
+
+---
+
 ## How to Test a Complete Request
 
 1. **Benchmark Query**:

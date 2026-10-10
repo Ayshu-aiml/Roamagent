@@ -8,7 +8,12 @@ dotenv.config();
 import { AgentPlanResponse, TravelConstraints } from './src/types/travel.js';
 import { geocodeLocation, fetchMultimodalOptions, getWeatherForecast } from './server/transportAdapters.js';
 import { buildItinerariesFromGraph, simulateDisruption } from './server/travelGraphEngine.js';
-import { extractConstraintsWithGemini, generateItineraryExplanation, generateSpeechWithGemini } from './server/geminiAgent.js';
+import {
+  extractConstraintsWithGemini,
+  generateItineraryExplanation,
+  generateSpeechWithGemini,
+  isGeminiQuotaExhausted
+} from './server/geminiAgent.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -79,7 +84,7 @@ async function executeAgentTripPlanning(constraints: TravelConstraints): Promise
     emergencyContacts,
     operatorVerifications,
     speechSummary: '',
-    isDemoMode: !process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'MY_GEMINI_API_KEY'
+    isDemoMode: !process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'MY_GEMINI_API_KEY' || isGeminiQuotaExhausted()
   };
 
   // Step 6: AI Explanation & Speech synthesis
